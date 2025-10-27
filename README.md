@@ -34,8 +34,8 @@ You can run this project locally using **Streamlit**.
 
 ```bash
 # Clone this repository
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
+git clone https://github.com/Bkk3456/Bitwise_Insights.git
+cd Bitwise_Insights
 
 # (Optional) Create a virtual environment
 python -m venv venv
