@@ -47,3 +47,8 @@ pip install -r requirements.txt
 
 # Run the Streamlit app
 streamlit run markov_huffman_visualizer.py
+
+## Contributors
+
+- Jetti Kamala (https://github.com/Dino234118)
+- Kavyashree B K (https://github.com/Bkk3456)
