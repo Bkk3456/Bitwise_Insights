@@ -9,6 +9,44 @@ import pandas as pd
 import mimetypes  
 import math
 
+# ------------------------ARITHMETIC----------------------------
+def arithmetic_encode(data):
+    if not data:
+        return 0, {}
+
+    freq = Counter(data)
+    total = sum(freq.values())
+    prob_ranges = {}
+
+    # Build ranges
+    cumulative = 0.0
+    for char in sorted(freq):
+        prob = freq[char] / total
+        prob_ranges[char] = (cumulative, cumulative + prob)
+        cumulative += prob
+
+    # Perform encoding
+    low = 0.0
+    high = 1.0
+
+    for char in data:
+        range_ = high - low
+        char_low, char_high = prob_ranges[char]
+        high = low + range_ * char_high
+        low = low + range_ * char_low
+
+    # Final code interval
+    final_code = (low + high) / 2
+    interval_size = high - low
+
+    # Prevent zero-bit output (when float precision fails)
+    if interval_size <= 0.0:
+        total_bits = len(data) * 8  # fallback to worst case
+    else:
+        bit_length = -math.log2(interval_size)
+        total_bits = max(1, math.ceil(bit_length))  # minimum of 1 bit
+
+    return total_bits, prob_ranges
 
 # ----------------------------- RLE -----------------------------------
 def run_length_encode(data):
@@ -171,11 +209,13 @@ if text:
     markov_bpc = markov_bits / length
     rle_bpc = rle_bits / length
 
+    arith_bits, arith_probs = arithmetic_encode(text)
+
     df = pd.DataFrame({
-        "Method": ["Raw (ASCII)", "Standard Huffman", "Markov-Huffman", "Run-Length Encoding"],
-        "Total Bits": [raw_bits, std_bits, markov_bits, rle_bits],
-        "Compression Ratio (%)": [0, std_ratio, markov_ratio, rle_ratio],
-        "Bits per Character": [8, std_bpc, markov_bpc, rle_bpc]
+        "Method": ["Raw (ASCII)", "Standard Huffman", "Markov-Huffman", "Run-Length Encoding", "Arithmetic Encoding"],
+        "Total Bits": [raw_bits, std_bits, markov_bits, rle_bits, arith_bits],
+        "Compression Ratio (%)": [0, std_ratio, markov_ratio, rle_ratio, round((1 - arith_bits / raw_bits) * 100, 2)],
+        "Bits per Character": [8, std_bpc, markov_bpc, rle_bpc, arith_bits / length]
     })
 
     st.table(df)
@@ -239,6 +279,9 @@ if text:
 
     with st.expander("📄 Markov-Huffman Codes (context → next → code)"):
         st.json(markov_codes)
+
+    with st.expander("📄 Arithmetic Encoding Probability Ranges"):
+        st.json(arith_probs)
 
 else:
     if not error_msg:
